@@ -1,0 +1,142 @@
+---
+import '@/styles/global.css';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import MobileBar from '@/components/MobileBar.astro';
+import { company, services, ratings, sister } from '@/data/business';
+
+export interface Props {
+  title: string;
+  description: string;
+  /** Path only, e.g. "/reviews/" */
+  canonical?: string;
+  ogImage?: string;
+  noindex?: boolean;
+  /** Extra JSON-LD nodes merged into the page graph. */
+  schema?: Record<string, unknown>[];
+}
+
+const {
+  title,
+  description,
+  canonical = Astro.url.pathname,
+  ogImage = '/og.jpg',
+  noindex = false,
+  schema = [],
+} = Astro.props;
+
+const site = company.url;
+const canonicalUrl = new URL(canonical, site).href;
+const ogUrl = new URL(ogImage, site).href;
+
+const business = {
+  '@type': ['AutoRepair', 'AutoPartsStore'],
+  '@id': `${site}/#business`,
+  name: company.name,
+  description: company.shortDescription,
+  slogan: company.tagline,
+  url: site,
+  telephone: company.phoneRaw,
+  email: company.email,
+  image: `${site}/og.jpg`,
+  logo: `${site}/icon-512.png`,
+  priceRange: '$$',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: company.street,
+    addressLocality: company.city,
+    addressRegion: company.state,
+    postalCode: company.zip,
+    addressCountry: 'US',
+  },
+  geo: { '@type': 'GeoCoordinates', latitude: company.geo.lat, longitude: company.geo.lng },
+  areaServed: { '@type': 'State', name: 'Vermont' },
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: ratings.google.rating,
+    reviewCount: ratings.google.count,
+    bestRating: 5,
+  },
+  sameAs: [company.facebook],
+  department: { '@type': 'AutoRepair', name: sister.name, address: sister.address },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Truck repair and parts',
+    itemListElement: services.map((s) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.name } })),
+  },
+};
+
+const graph = {
+  '@context': 'https://schema.org',
+  '@graph': [business, { '@type': 'WebSite', '@id': `${site}/#website`, url: site, name: company.name }, ...schema],
+};
+---
+
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
+    <meta name="theme-color" content="#0c0d0f" />
+    <meta name="format-detection" content="telephone=yes" />
+    <meta name="geo.region" content="US-VT" />
+    <meta name="geo.placename" content="Barre, Vermont" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={company.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(graph)} is:inline />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+    <slot name="head" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <MobileBar />
+    <div class="grain" aria-hidden="true"></div>
+
+    <script>
+      // Scroll reveal. IntersectionObserver only; no scroll listeners.
+      const els = document.querySelectorAll<HTMLElement>('[data-reveal]');
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (e.isIntersecting) {
+                e.target.classList.add('is-in');
+                io.unobserve(e.target);
+              }
+            }
+          },
+          { rootMargin: '0px 0px -8% 0px', threshold: 0.12 },
+        );
+        els.forEach((el) => io.observe(el));
+      } else {
+        els.forEach((el) => el.classList.add('is-in'));
+      }
+    </script>
+  </body>
+</html>

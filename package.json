@@ -1,0 +1,24 @@
+{
+  "name": "mcleods-spring-chassis",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0 --port 4541",
+    "build": "astro build",
+    "preview": "astro preview --port 4542",
+    "astro": "astro"
+  },
+  "engines": {
+    "node": ">=20.3.0"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/archivo": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@phosphor-icons/core": "^2.1.1",
+    "astro": "^5.18.2",
+    "sharp": "^0.35.5",
+    "three": "^0.186.1"
+  }
+}

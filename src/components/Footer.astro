@@ -1,0 +1,103 @@
+---
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import logo from '@/assets/brand/logo-full.png';
+import { company, hours, sister, services, history } from '@/data/business';
+const year = new Date().getFullYear();
+---
+<footer class="ftr">
+  <div class="wrap ftr__grid">
+    <div class="ftr__brand">
+      <Image src={logo} alt={`${company.name}, ${company.tagline}`} widths={[300, 600]} sizes="300px" class="ftr__logo" />
+      <p class="ftr__bio">Family-owned since {history.founded}. Heavy truck repair and parts in {company.city}, {company.state}. {company.tagline}.</p>
+    </div>
+
+    <div>
+      <h2 class="ftr__h">The shop</h2>
+      <ul class="ftr__list">
+        <li><a href={company.mapsUrl} rel="noopener" target="_blank"><Icon name="map-pin" size={16} /> {company.address}</a></li>
+        <li><a href={`tel:${company.phoneRaw}`}><Icon name="phone" size={16} /> {company.phone}</a></li>
+        <li><a href={`tel:${company.tollFreeRaw}`}><Icon name="phone" size={16} /> {company.tollFree} toll free</a></li>
+        <li><a href={`mailto:${company.email}`}><Icon name="envelope-simple" size={16} /> {company.email}</a></li>
+        <li><a href={company.facebook} rel="noopener" target="_blank"><Icon name="facebook-logo" size={16} /> Facebook</a></li>
+        <li class="ftr__hours"><Icon name="clock" size={16} /> {hours.summary}</li>
+      </ul>
+    </div>
+
+    <div class="ftr__work">
+      <h2 class="ftr__h">Work</h2>
+      <ul class="ftr__list">
+        {services.map((s) => <li><a href={`/#${s.slug}`}>{s.name}</a></li>)}
+        <li><a href="/#parts">Parts counter</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="ftr__h">Sister shop</h2>
+      <p class="ftr__sister"><strong>{sister.name}</strong><br />{sister.address}<br /><span class="mono">{sister.tollFree}</span></p>
+    </div>
+  </div>
+
+  <div class="wrap ftr__base">
+    <p>&copy; {year} {company.name}. {company.address}.</p>
+    <p><a href="/reviews/">Reviews</a> · Site by <a href="https://arkitechsolutions.com" rel="noopener" target="_blank">ArkiTech Solutions</a></p>
+  </div>
+</footer>
+
+<style>
+  .ftr {
+    border-top: 1px solid var(--line);
+    background: var(--ink-950);
+    padding-top: var(--s-10);
+  }
+  .ftr__grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1.2fr 0.9fr 0.9fr;
+    gap: var(--s-9);
+  }
+  .ftr__brand :global(.ftr__logo) { width: 280px; height: auto; }
+  .ftr__bio { margin-top: var(--s-6); max-width: 22rem; color: var(--text-muted); font-size: var(--t-sm); line-height: var(--lh-sm); }
+  .ftr__h {
+    font-family: var(--font-mono);
+    font-stretch: 100%;
+    font-size: var(--t-xs);
+    line-height: var(--lh-xs);
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    color: var(--text-faint);
+    margin-bottom: var(--s-5);
+  }
+  .ftr__list { list-style: none; display: grid; gap: var(--s-3); font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--text-muted); }
+  .ftr__list a { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); }
+  .ftr__list a:hover { color: var(--green-400); }
+  .ftr__list :global(svg) { flex: none; color: var(--text-faint); }
+  .ftr__hours { display: inline-flex; align-items: center; gap: 8px; }
+  .ftr__sister { font-size: var(--t-sm); line-height: 1.6; color: var(--text-muted); }
+  .ftr__sister strong { color: var(--text); }
+  .ftr__base {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-4);
+    margin-top: var(--s-11);
+    padding-block: var(--s-7);
+    border-top: 1px solid var(--line);
+    font-size: var(--t-xs);
+    line-height: var(--lh-xs);
+    color: var(--text-faint);
+  }
+  .ftr__base a { color: var(--text-muted); }
+  @media (max-width: 960px) {
+    .ftr__grid { grid-template-columns: 1fr 1fr; }
+    .ftr__brand { grid-column: 1 / -1; }
+  }
+  @media (max-width: 860px) {
+    .ftr { padding-top: var(--s-8); }
+    .ftr__grid { gap: var(--s-7) var(--s-5); }
+    .ftr__brand { display: flex; align-items: center; gap: var(--s-5); }
+    .ftr__brand :global(.ftr__logo) { width: 150px; flex: none; }
+    .ftr__bio { margin-top: 0; }
+    .ftr__work { display: none; }
+    .ftr__base { margin-top: var(--s-8); padding-block: var(--s-5); }
+  }
+</style>

@@ -1,0 +1,234 @@
+---
+/**
+ * Filterable wall of the real Google reviews in reviews.json.
+ * Topics are tagged at build time by keyword, so adding a review to the JSON
+ * is all it takes.
+ *
+ * layout="row"  one swipeable row with arrows (home page, keeps it short)
+ * layout="grid" masonry columns of everything (the /reviews/ page)
+ */
+import Icon from './Icon.astro';
+import data from '@/data/reviews.json';
+
+export interface Props {
+  id?: string;
+  layout?: 'row' | 'grid';
+}
+const { id = 'wall', layout = 'grid' } = Astro.props;
+const row = layout === 'row';
+
+const topics = [
+  { key: 'springs', label: 'Springs & suspension', re: /spring|leaf|suspension|chassis|alignment|u bolt/i },
+  { key: 'welding', label: 'Welding & frames', re: /weld|fabricat|frame/i },
+  { key: 'heavy', label: 'Heavy trucks', re: /heavy|tractor|trailer|logging|large truck|big truck|rv|plow|sander/i },
+  { key: 'honest', label: 'Honest & fair', re: /honest|price|reasonable|fair|integrity|treat you right/i },
+  { key: 'fast', label: 'Fast', re: /quick|fast|promptly|stayed late|responsive|in and out|short notice/i },
+];
+
+// Longest, most specific reviews first, then newest.
+const reviews = [...data.reviews]
+  .sort((a, b) => b.text.length - a.text.length || b.year - a.year)
+  .map((r) => ({ ...r, tags: topics.filter((t) => t.re.test(r.text)).map((t) => t.key) }));
+
+const counts = Object.fromEntries(topics.map((t) => [t.key, reviews.filter((r) => r.tags.includes(t.key)).length]));
+const initials = (n: string) => n.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+---
+
+<div class:list={['wall', { 'wall--row': row }]} data-wall={id}>
+  <div class="wall__bar">
+    <div class="wall__filters" role="toolbar" aria-label="Filter reviews by topic">
+      <button type="button" class="chip is-on" data-filter="all" aria-pressed="true">All <span class="mono">{reviews.length}</span></button>
+      {topics.map((t) => (
+        <button type="button" class="chip" data-filter={t.key} aria-pressed="false">{t.label} <span class="mono">{counts[t.key]}</span></button>
+      ))}
+    </div>
+    {row && (
+      <div class="wall__arrows">
+        <button type="button" class="arrow" data-step="-1" aria-label="Previous reviews"><Icon name="arrow-right" size={20} class="flip" /></button>
+        <button type="button" class="arrow" data-step="1" aria-label="Next reviews"><Icon name="arrow-right" size={20} /></button>
+      </div>
+    )}
+  </div>
+
+  <ul class="wall__grid" data-track tabindex={row ? 0 : undefined} aria-label="Google reviews">
+    {reviews.map((r) => (
+      <li class="rev" data-tags={r.tags.join(' ')}>
+        <div class="rev__stars" aria-label="5 out of 5 stars">
+          {Array.from({ length: 5 }).map(() => <Icon name="star" weight="fill" size={14} />)}
+        </div>
+        <blockquote class="rev__text" data-text>
+          {r.text.split('\n').map((line, j) => <p>{line}{r.truncated && j === r.text.split('\n').length - 1 ? '…' : ''}</p>)}
+        </blockquote>
+        {row && <button type="button" class="rev__more" data-more hidden>Read all of it</button>}
+        <div class="rev__by">
+          <span class="rev__avatar mono" aria-hidden="true">{initials(r.name)}</span>
+          <span class="rev__who">
+            <span class="rev__name">{r.name}</span>
+            <span class="rev__meta mono">{r.localGuide ? 'Local Guide · ' : ''}Google · {r.year}</span>
+          </span>
+        </div>
+        {r.ownerReply && (
+          <details class="rev__reply">
+            <summary><Icon name="caret-down" size={14} /> Reply from McLeod’s</summary>
+            <p>{r.ownerReply}</p>
+          </details>
+        )}
+      </li>
+    ))}
+  </ul>
+
+  <p class="wall__note">Shown exactly as written on Google. Reviews cut short by Google end in an ellipsis.</p>
+</div>
+
+<style>
+  .wall__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-5);
+    margin-bottom: var(--s-6);
+  }
+  .wall__filters { display: flex; flex-wrap: wrap; gap: var(--s-3); }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 8px 14px;
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    font-size: var(--t-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+  }
+  .chip .mono { font-size: 11px; color: var(--text-faint); }
+  .chip:hover { color: var(--text); border-color: var(--steel-500); }
+  .chip.is-on { background: var(--green-500); border-color: var(--green-500); color: var(--ink-950); }
+  .chip.is-on .mono { color: var(--green-800); }
+  .wall__arrows { display: flex; gap: var(--s-3); flex: none; }
+  .arrow {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+  .arrow:hover { background: var(--green-500); border-color: var(--green-500); color: var(--ink-950); }
+  .arrow :global(.flip) { transform: rotate(180deg); }
+
+  /* Grid: masonry columns */
+  .wall__grid { list-style: none; columns: 3 320px; column-gap: var(--s-5); }
+  .rev {
+    break-inside: avoid;
+    margin-bottom: var(--s-5);
+    padding: var(--s-6);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    display: grid;
+    gap: var(--s-4);
+    align-content: start;
+    transition: border-color 200ms ease;
+  }
+  .rev:hover { border-color: var(--line-strong); }
+  .rev[hidden] { display: none; }
+
+  /* Row: one swipeable line of cards */
+  .wall--row .wall__grid {
+    columns: auto;
+    display: flex;
+    gap: var(--s-4);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    padding-bottom: var(--s-4);
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink-600) transparent;
+  }
+  .wall--row .rev { flex: 0 0 min(360px, 84vw); margin: 0; scroll-snap-align: start; }
+  .wall--row .rev__text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; overflow: hidden; }
+  .wall--row .rev.is-open .rev__text { display: grid; -webkit-line-clamp: unset; }
+  .rev__more { justify-self: start; padding: 0; border: 0; background: none; font-size: var(--t-xs); font-weight: 700; color: var(--green-400); cursor: pointer; }
+
+  .rev__stars { display: flex; gap: 2px; color: var(--green-400); }
+  .rev__text { display: grid; gap: 0.6em; font-size: var(--t-base); line-height: var(--lh-base); color: var(--text); }
+  .rev__by { display: flex; align-items: center; gap: var(--s-4); }
+  .rev__avatar {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    background: var(--ink-700);
+    color: var(--steel-200);
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 50%;
+  }
+  .rev__who { display: grid; gap: 2px; }
+  .rev__name { font-weight: 700; font-size: var(--t-sm); }
+  .rev__meta { font-size: 11px; color: var(--text-faint); letter-spacing: 0.04em; }
+  .rev__reply { border-top: 1px solid var(--line); padding-top: var(--s-4); }
+  .rev__reply summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    list-style: none;
+    font-size: var(--t-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--green-400);
+  }
+  .rev__reply summary::-webkit-details-marker { display: none; }
+  .rev__reply summary :global(svg) { transition: transform 240ms var(--ease-out); }
+  .rev__reply[open] summary :global(svg) { transform: rotate(180deg); }
+  .rev__reply p { margin-top: var(--s-3); font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--text-muted); }
+  .wall__note { margin-top: var(--s-5); font-size: var(--t-xs); color: var(--text-faint); }
+
+  @media (max-width: 860px) {
+    .wall__arrows { display: none; }
+    .wall__filters { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); scrollbar-width: none; }
+    .wall__filters::-webkit-scrollbar { display: none; }
+    .chip { flex: none; }
+    .wall--row .wall__grid { margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); scrollbar-width: none; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-wall]').forEach((wall) => {
+    const items = [...wall.querySelectorAll<HTMLElement>('.rev')];
+    const chips = [...wall.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+    const track = wall.querySelector<HTMLElement>('[data-track]');
+    chips.forEach((c) => c.addEventListener('click', () => {
+      const f = c.dataset.filter || 'all';
+      chips.forEach((o) => { o.classList.toggle('is-on', o === c); o.setAttribute('aria-pressed', String(o === c)); });
+      for (const el of items) el.hidden = !(f === 'all' || (el.dataset.tags || '').split(' ').includes(f));
+      track?.scrollTo({ left: 0 });
+    }));
+
+    // Row mode: arrows page the track; clamped reviews get a "read all" toggle.
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    wall.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) =>
+      b.addEventListener('click', () => track?.scrollBy({ left: Number(b.dataset.step) * track.clientWidth * 0.8, behavior: reduce ? 'auto' : 'smooth' })),
+    );
+    if (wall.classList.contains('wall--row')) {
+      for (const el of items) {
+        const text = el.querySelector<HTMLElement>('[data-text]');
+        const more = el.querySelector<HTMLButtonElement>('[data-more]');
+        if (text && more && text.scrollHeight > text.clientHeight + 4) {
+          more.hidden = false;
+          more.addEventListener('click', () => {
+            const open = el.classList.toggle('is-open');
+            more.textContent = open ? 'Show less' : 'Read all of it';
+          });
+        }
+      }
+    }
+  });
+</script>

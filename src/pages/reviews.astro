@@ -1,0 +1,69 @@
+---
+import Base from '@/layouts/Base.astro';
+import ReviewWall from '@/components/ReviewWall.astro';
+import Icon from '@/components/Icon.astro';
+import { company, cta, ratings } from '@/data/business';
+import data from '@/data/reviews.json';
+
+const withText = data.reviews.length;
+const replies = data.reviews.filter((r) => r.ownerReply).length;
+const oldest = Math.min(...data.reviews.map((r) => r.year));
+---
+
+<Base
+  title={`Reviews | ${company.name}, Barre VT`}
+  description={`${ratings.google.rating} stars from ${ratings.google.count} Google reviews. Read what truck owners, fleet operators and loggers say about ${company.name} in Barre, Vermont.`}
+>
+  <section class="rhead">
+    <div class="wrap rhead__grid">
+      <div>
+        <h1 class="h-display rhead__h">{ratings.google.rating} stars.<br /><span class="green">{ratings.google.count} reviews.</span></h1>
+        <p class="lede rhead__lede">Every written Google review for {company.name}, word for word, going back to {oldest}. Filter by what matters to you.</p>
+      </div>
+      <dl class="rhead__stats">
+        <div><dt class="mono">Google rating</dt><dd>{ratings.google.rating} <span class="rhead__stars" aria-hidden="true">{Array.from({ length: 5 }).map(() => <Icon name="star" weight="fill" size={16} />)}</span></dd></div>
+        <div><dt class="mono">Written reviews</dt><dd>{withText} of {ratings.google.count}</dd></div>
+        <div><dt class="mono">Answered by the shop</dt><dd>{replies}</dd></div>
+        <div><dt class="mono">Facebook</dt><dd>{ratings.facebook.recommendPct}% recommend</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section rbody">
+    <div class="wrap">
+      <ReviewWall id="all" />
+      <div class="rcta">
+        <h2 class="rcta__h">Need work done?</h2>
+        <div class="rcta__btns">
+          <a class="btn" href={`tel:${company.phoneRaw}`}><Icon name="phone" weight="fill" /> {cta.call}</a>
+          <a class="btn btn--ghost" href={company.mapsUrl} rel="noopener" target="_blank"><Icon name="navigation-arrow" /> {cta.directions}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .rhead {
+    padding-top: calc(var(--header-h) + var(--s-10));
+    padding-bottom: var(--s-10);
+    border-bottom: 1px solid var(--line);
+    margin-top: calc(var(--header-h) * -1);
+    background: radial-gradient(60% 80% at 85% 0%, rgb(47 106 36 / 0.22), transparent 70%), var(--bg);
+  }
+  .rhead__grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--s-10); align-items: end; }
+  .rhead__h { font-size: clamp(3rem, 7vw, 6.5rem); }
+  .rhead__lede { margin-top: var(--s-6); }
+  .rhead__stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 0; }
+  .rhead__stats div { background: var(--bg); padding: var(--s-5) var(--s-6); display: grid; gap: 6px; }
+  .rhead__stats dt { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); }
+  .rhead__stats dd { margin: 0; font-size: var(--t-2xl); font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .rhead__stars { display: inline-flex; gap: 1px; color: var(--green-400); }
+  .rbody { padding-top: var(--s-9); }
+  .rcta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--s-6); margin-top: var(--s-11); padding: var(--s-8); background: var(--surface); border: 1px solid var(--line); border-top: 2px solid var(--green-500); }
+  .rcta__h { font-size: var(--t-5xl); line-height: 1; }
+  .rcta__btns { display: flex; flex-wrap: wrap; gap: var(--s-4); }
+  @media (max-width: 860px) {
+    .rhead__grid { grid-template-columns: 1fr; }
+  }
+</style>

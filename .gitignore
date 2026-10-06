@@ -1,0 +1,11 @@
+node_modules
+dist
+.astro
+.env
+.DS_Store
+.claude
+
+# Raw scrape and generation originals stay local. The Facebook scrape holds
+# personal phone numbers and family photos; never commit it to a public repo.
+raw-assets/facebook/
+raw-assets/higgsfield/

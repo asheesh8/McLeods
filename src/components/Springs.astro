@@ -1,0 +1,236 @@
+---
+/**
+ * "Springs are in the name." The copy steps on the left, a leaf spring pack
+ * building itself on the right (src/scripts/spring-scene). It plays on its own
+ * once in view; nothing is pinned. Steps are buttons, so people can jump.
+ * Every quote is an exact excerpt from a Google review in reviews.json; the
+ * build fails if one drifts.
+ */
+import { Image } from 'astro:assets';
+import Scatter from './Scatter.astro';
+import poster from '@/assets/gen/leaf-spring.jpg';
+import allReviews from '@/data/reviews.json';
+
+const steps = [
+  {
+    title: 'New springs, built to fit',
+    body: 'Broken leaves, a sagging pack, a spring nobody stocks. Replaced and fit for pickups through tractor trailers.',
+    quote: 'I went there to get a leaf fixed on one side of my F150. It turned out both sides were broken.',
+    name: 'Corey Norris',
+  },
+  {
+    title: 'U-bolts bent on the spot',
+    body: 'Custom U-bolts, bushings, pins and hangers, made or pulled off the shelf while you wait.',
+    quote: 'they even bent up some custom U bolts for me on the spot',
+    name: 'Andrew Spencer',
+  },
+  {
+    title: 'Add a leaf for the load',
+    body: 'A plow up front or a camper in the bed. An added leaf brings the ride height back.',
+    quote: 'top notch work had them put extra leaf in my truck great work and great price',
+    name: 'anthony wright',
+  },
+  {
+    title: 'Back to work',
+    body: 'Clamped, torqued and checked, then the truck goes back on the road.',
+    quote: 'There simply is no better place for heavy truck suspension work.',
+    name: 'george denagy',
+  },
+];
+
+const norm = (t: string) => t.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').replace(/[.!]$/, '');
+for (const s of steps) {
+  const src = allReviews.reviews.find((r) => r.name === s.name);
+  if (!src || !norm(src.text).includes(norm(s.quote))) throw new Error(`Springs quote for ${s.name} does not match the review text.`);
+}
+---
+
+<section class="springs" id="springs" data-spring-track aria-labelledby="springs-h">
+  <Scatter items={[
+    { name: 'coil-spring', x: '91%', y: '12%', size: 120, rot: 14, depth: 0.45, hideMobile: true },
+    { name: 'hex-nut', x: '38%', y: '82%', size: 90, rot: 20, depth: 0.3 },
+  ]} />
+  <div class="wrap springs__grid">
+    <div class="springs__copy">
+      <p class="eyebrow" data-reveal>Springs are in the name</p>
+      <h2 class="h-section springs__h" id="springs-h" data-reveal style="--d:60ms">Leaf by leaf.</h2>
+
+      <ol class="springs__steps" role="tablist" aria-label="How a spring job goes">
+        {steps.map((s, i) => (
+          <li class:list={['step', { 'is-on': i === 0 }]} data-step={i}>
+            <button type="button" class="step__head" role="tab" aria-selected={i === 0 ? 'true' : 'false'} data-goto={i}>
+              <span class="step__n mono">{String(i + 1).padStart(2, '0')}</span>
+              <span class="step__t">{s.title}</span>
+              <span class="step__bar" aria-hidden="true"></span>
+            </button>
+            <div class="step__body">
+              <div class="step__inner">
+                <p class="step__b">{s.body}</p>
+                <figure class="step__q">
+                  <blockquote>“{s.quote}”</blockquote>
+                  <figcaption class="mono">{s.name}, Google review</figcaption>
+                </figure>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <div class="springs__stage" aria-hidden="true">
+      <Image src={poster} alt="" widths={[800, 1400]} sizes="(max-width: 860px) 100vw, 60vw" class="springs__poster" />
+      <canvas class="springs__canvas" data-spring></canvas>
+      <div class="springs__glow"></div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const track = document.querySelector<HTMLElement>('[data-spring-track]');
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-spring]');
+  const steps = [...document.querySelectorAll<HTMLElement>('[data-step]')];
+  const setStep = (i: number) => {
+    steps.forEach((s, j) => {
+      s.classList.toggle('is-on', j === i);
+      s.querySelector('[role="tab"]')?.setAttribute('aria-selected', String(j === i));
+    });
+  };
+  if (track && canvas) {
+    let ctl: { goTo(i: number): void } | undefined;
+    steps.forEach((s, i) => s.querySelector('[data-goto]')?.addEventListener('click', () => { setStep(i); ctl?.goTo(i); }));
+    let started = false;
+    const start = () => {
+      if (started) return;
+      started = true;
+      import('@/scripts/spring-scene')
+        .then(({ mountSpring }) => { ctl = mountSpring(canvas, track, setStep); })
+        .catch(() => canvas.remove());
+    };
+    // Load three.js only when the section is close.
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { start(); io.disconnect(); } }, { rootMargin: '500px 0px' });
+      io.observe(track);
+    } else start();
+  }
+</script>
+
+<style>
+  .springs {
+    position: relative;
+    padding-block: var(--section-y);
+    overflow: hidden;
+    background:
+      radial-gradient(55% 60% at 72% 50%, rgb(47 106 36 / 0.18), transparent 70%),
+      var(--bg);
+  }
+  .springs__grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 440px) 1fr;
+    gap: var(--s-9);
+    align-items: center;
+  }
+  .springs__h { margin-top: var(--s-5); }
+  .springs__steps { list-style: none; display: grid; margin-top: var(--s-8); }
+
+  .step { border-top: 1px solid var(--line); }
+  .step:last-child { border-bottom: 1px solid var(--line); }
+  .step__head {
+    position: relative;
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    align-items: center;
+    width: 100%;
+    padding: var(--s-5) 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    opacity: 0.45;
+    transition: opacity 400ms var(--ease-out);
+  }
+  .step__head:hover, .step.is-on .step__head { opacity: 1; }
+  .step__n { font-size: var(--t-xs); color: var(--text-faint); letter-spacing: 0.1em; }
+  .step.is-on .step__n { color: var(--green-400); }
+  .step__t {
+    font-family: var(--font-display);
+    font-stretch: 78%;
+    font-weight: 800;
+    font-size: var(--t-2xl);
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+  .step__bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1px;
+    height: 2px;
+    background: var(--green-500);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .step.is-on .step__bar { transform: scaleX(1); transition: transform 3s linear; }
+
+  /* Only the active step shows its body and quote. */
+  .step__body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 500ms var(--ease-out);
+  }
+  .step__inner { overflow: hidden; min-height: 0; padding-left: 40px; }
+  .step.is-on .step__body { grid-template-rows: 1fr; }
+  .step__b, .step__q { margin: 0; color: var(--text-muted); font-size: var(--t-sm); line-height: var(--lh-sm); }
+  .step__q blockquote { color: var(--text); font-size: var(--t-base); line-height: var(--lh-base); margin-top: var(--s-4); }
+  .step__q figcaption { margin-top: 6px; padding-bottom: var(--s-5); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+
+  .springs__stage {
+    position: relative;
+    aspect-ratio: 16 / 11;
+    min-height: 420px;
+  }
+  .springs__stage :global(.springs__poster) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.9;
+    transition: opacity 900ms var(--ease-out);
+    mask-image: radial-gradient(70% 70% at 50% 50%, #000 55%, transparent);
+  }
+  .springs__canvas {
+    position: absolute;
+    inset: -8% -10%;
+    width: 120%;
+    height: 116%;
+    opacity: 0;
+    transition: opacity 900ms var(--ease-out);
+  }
+  .springs__canvas[data-ready] { opacity: 1; }
+  .springs__stage:has(.springs__canvas[data-ready]) :global(.springs__poster) { opacity: 0; }
+  .springs__glow {
+    position: absolute;
+    inset: auto 10% 4% 10%;
+    height: 30%;
+    background: radial-gradient(closest-side, rgb(90 172 62 / 0.16), transparent);
+    pointer-events: none;
+  }
+
+  @media (max-width: 960px) {
+    .springs__grid { grid-template-columns: 1fr; }
+    .springs__grid { gap: var(--s-5); }
+    .springs__stage { order: -1; min-height: 0; aspect-ratio: 16 / 10; }
+    .springs__steps { margin-top: var(--s-5); }
+    .step__head { padding: var(--s-4) 0; }
+    .step__t { font-size: var(--t-xl); }
+    .springs__canvas { inset: 0; width: 100%; height: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .step__body { grid-template-rows: 1fr; }
+    .step__head { opacity: 1; }
+    .step__bar { display: none; }
+  }
+</style>

@@ -1,0 +1,39 @@
+---
+/**
+ * Phosphor icons, inlined at build time from @phosphor-icons/core.
+ * Bold weight by default; pass weight="fill" for the filled set.
+ * Add a name to the glob below before using it.
+ */
+export interface Props {
+  name: string;
+  weight?: 'bold' | 'fill';
+  class?: string;
+  size?: number;
+  label?: string;
+}
+const { name, weight = 'bold', class: cls, size, label } = Astro.props;
+
+const bold = import.meta.glob(
+  '/node_modules/@phosphor-icons/core/assets/bold/{phone,map-pin,navigation-arrow,arrow-right,arrow-up-right,star,quotes,plus,check,clock,envelope-simple,facebook-logo,wrench,truck,snowflake,pipe,fire,gear-six,gauge,steering-wheel,package,toolbox,seal-check,x,list,caret-down,google-logo,briefcase,handshake,tire,users-three,storefront,arrow-down}-bold.svg',
+  { query: '?raw', import: 'default', eager: true },
+) as Record<string, string>;
+const fill = import.meta.glob('/node_modules/@phosphor-icons/core/assets/fill/{star,phone,seal-check,map-pin}-fill.svg', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+const raw =
+  weight === 'fill'
+    ? fill[`/node_modules/@phosphor-icons/core/assets/fill/${name}-fill.svg`]
+    : bold[`/node_modules/@phosphor-icons/core/assets/bold/${name}-bold.svg`];
+if (!raw) throw new Error(`Icon "${name}" (${weight}) is not in the Icon.astro glob.`);
+
+const attrs = [
+  `class="icon${cls ? ' ' + cls : ''}"`,
+  size ? `width="${size}" height="${size}"` : '',
+  label ? `role="img" aria-label="${label}"` : 'aria-hidden="true" focusable="false"',
+].join(' ');
+const svg = raw.replace('<svg ', `<svg ${attrs} fill="currentColor" `);
+---
+<Fragment set:html={svg} />

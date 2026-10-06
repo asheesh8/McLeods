@@ -1,0 +1,695 @@
+---
+import { Image } from 'astro:assets';
+import Base from '@/layouts/Base.astro';
+import Hero from '@/components/Hero.astro';
+import Springs from '@/components/Springs.astro';
+import ReviewWall from '@/components/ReviewWall.astro';
+import Scatter from '@/components/Scatter.astro';
+import Icon from '@/components/Icon.astro';
+import { company, cta, services, parts, fleet, faqs, hiring, hours, ratings, sister, history } from '@/data/business';
+import allReviews from '@/data/reviews.json';
+
+// Generated art (Higgsfield), see raw-assets/ASSETS.md
+import imgWelding from '@/assets/gen/welding.jpg';
+import imgChassis from '@/assets/gen/under-chassis.jpg';
+import imgHydraulic from '@/assets/gen/hydraulic.jpg';
+import imgLeaf from '@/assets/gen/leaf-spring.jpg';
+import imgPlowNight from '@/assets/gen/plow-night.jpg';
+import imgUbolts from '@/assets/gen/u-bolts.jpg';
+
+// Real photos from the McLeod's Facebook page
+import pAxle from '@/assets/photos/axle-stands.jpg';
+import pPlowTruck from '@/assets/photos/plow-spreader-truck.jpg';
+import pWrecker from '@/assets/photos/wrecker-bay.jpg';
+import pPete from '@/assets/photos/peterbilt-front.jpg';
+import pCrane from '@/assets/photos/crane-truck.jpg';
+import pFrameWeld from '@/assets/photos/frame-weld.jpg';
+import pFlatbed from '@/assets/photos/flatbed-frame.jpg';
+import pBench from '@/assets/photos/welder-bench.jpg';
+import pSpringBench from '@/assets/photos/spring-bench.jpg';
+import pTanker from '@/assets/photos/tanker-body-swap.jpg';
+import pPlowShop from '@/assets/photos/plow-night-shop.jpg';
+import pChain from '@/assets/photos/chain-rack.jpg';
+import pCounter from '@/assets/photos/parts-counter.jpg';
+import pOwners from '@/assets/photos/brian-shannon.jpg';
+import pSiblings from '@/assets/photos/brian-jr-caitlin.jpg';
+import pShop from '@/assets/photos/shop-sunny.jpg';
+
+const svc = Object.fromEntries(services.map((s) => [s.slug, s]));
+const bento = [
+  { s: svc.welding, img: imgWelding, alt: 'Welding a reinforcement plate onto a rusted truck frame rail, sparks falling', cls: 'b-a', icon: 'fire' },
+  { s: svc.alignment, img: imgChassis, alt: 'Looking up from a service pit at the frame rails, axle and leaf springs of a heavy truck', cls: 'b-b', icon: 'steering-wheel' },
+  { s: svc.brakes, img: pAxle, alt: 'A truck axle with brake drums set up on stands in the McLeod’s shop', cls: 'b-c', icon: 'gauge' },
+  { s: svc.hydraulics, img: imgHydraulic, alt: 'A freshly crimped hydraulic hose fitting on a steel workbench', cls: 'b-d', icon: 'pipe' },
+  { s: svc.springs, img: imgLeaf, alt: 'A heavy-duty leaf spring pack with U-bolts', cls: 'b-e', icon: 'truck', href: '#springs' },
+  { s: svc.plows, img: pPlowTruck, alt: 'A red Ford dump truck with a yellow plow and stainless spreader outside McLeod’s', cls: 'b-f', icon: 'snowflake', href: '#plows' },
+];
+
+// Captions come from the Facebook posts these photos were shared with.
+const gallery = [
+  { img: pCrane, alt: 'A red Hutch Crane Service crane truck parked outside the McLeod’s building', cap: 'Hutch Crane Service, in for an inspection.', w: 'wide' },
+  { img: pFrameWeld, alt: 'A fresh weld repairing a rusted truck frame', cap: 'We do a lot of frame repairs.', w: 'wide' },
+  { img: pPete, alt: 'The chrome grille of an Earle’s Peterbilt in a McLeod’s bay', cap: 'Earle’s Peterbilt in the bay.', w: 'tall' },
+  { img: pFlatbed, alt: 'A new steel body frame being fabricated on the shop floor', cap: 'The start of a new dump body for Dalton, NH.', w: 'wide' },
+  { img: pSpringBench, alt: 'A leaf spring pack clamped on a workbench next to a drill press', cap: 'A spring pack on the bench.', w: 'wide' },
+  { img: pTanker, alt: 'A polished aluminum tank truck inside the shop', cap: 'AlCO Energy truck in for a body swap.', w: 'wide' },
+  { img: pBench, alt: 'A McLeod’s tech working at a bench in the shop', cap: 'Shawn doing some radiator work.', w: 'wide' },
+  { img: pWrecker, alt: 'A heavy wrecker with custom paint parked in a McLeod’s bay', cap: 'A heavy wrecker in for service.', w: 'wide' },
+];
+
+// Review excerpts used outside the wall, word for word. The build fails if one drifts.
+const excerpts = [
+  { name: 'george denagy', quote: 'I have been a customer for about thirty years.' },
+  { name: 'Richard Deflorio', quote: 'Good family owned business and good people always willing to go the extra mile.' },
+];
+const norm = (t: string) => t.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ');
+for (const f of excerpts) {
+  const src = allReviews.reviews.find((r) => r.name === f.name);
+  if (!src || !norm(src.text).includes(norm(f.quote))) throw new Error(`Quote for ${f.name} does not match the review.`);
+}
+
+const faqSchema = {
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base
+  title={`${company.name} | Family-Owned Since ${history.founded}, Barre VT`}
+  description={company.shortDescription}
+  schema={[faqSchema]}
+>
+  <Hero />
+
+  <!-- Proof bar -->
+  <section class="proof" aria-label="At a glance">
+    <div class="wrap proof__row">
+      <div class="proof__item">
+        <span class="proof__n mono">{history.years}<small>yrs</small></span>
+        <span class="proof__l">family-owned, since {history.founded}</span>
+      </div>
+      <div class="proof__item">
+        <span class="proof__n mono">{ratings.google.rating}</span>
+        <span class="proof__l"><span class="proof__stars" aria-hidden="true">{Array.from({ length: 5 }).map(() => <Icon name="star" weight="fill" size={13} />)}</span>{ratings.google.count} Google reviews</span>
+      </div>
+      <div class="proof__item">
+        <span class="proof__n mono">{ratings.facebook.recommendPct}%</span>
+        <span class="proof__l">recommend on Facebook</span>
+      </div>
+      <div class="proof__item">
+        <span class="proof__n proof__n--word">Meyer</span>
+        <span class="proof__l">authorized plow dealer</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Family / heritage -->
+  <section class="section family" id="about" aria-labelledby="family-h">
+    <Scatter items={[
+      { name: 'model-pickup', x: '5%', y: '10%', size: 300, rot: -6, depth: 0.7, hideMobile: true },
+      { name: 'hex-bolt', x: '90%', y: '6%', size: 130, rot: 24, depth: 0.35 },
+    ]} />
+    <div class="wrap family__grid">
+      <div class="family__photos">
+        <figure class="frame family__a" data-reveal><Image src={pOwners} alt="Brian and Shannon Bailey, owners of McLeod’s Spring & Chassis" widths={[500, 900]} sizes="(max-width: 860px) 60vw, 28vw" /></figure>
+        <figure class="frame family__b" data-reveal style="--d:120ms"><Image src={pSiblings} alt="Brian Bailey Jr. and Caitlin Bailey in the McLeod’s parts room" widths={[400, 700]} sizes="(max-width: 860px) 40vw, 18vw" /></figure>
+        <div class="family__stamp" data-reveal style="--d:220ms" aria-hidden="true">
+          <span class="mono">Since</span>
+          <strong>{history.founded}</strong>
+          <span class="mono">Barre, VT</span>
+        </div>
+      </div>
+      <div class="family__copy">
+        <h2 class="h-section" id="family-h" data-reveal>Two families.<br /><span class="green">One shop.</span></h2>
+        <p class="lede" data-reveal style="--d:80ms">
+          McLeod’s started as the McLeod family’s business. The Baileys took it over in {history.founded}, and {history.years} years on it is still a family shop, with most customers finding it by word of mouth.
+        </p>
+        <figure class="family__q" data-reveal style="--d:140ms">
+          <blockquote>“{excerpts[0].quote}”</blockquote>
+          <figcaption class="mono">george denagy, Google review</figcaption>
+        </figure>
+      </div>
+    </div>
+    <div class="wrap">
+      <ol class="timeline" data-reveal style="--d:120ms">
+        {history.timeline.map((t) => (
+          <li>
+            <span class="timeline__when mono">{t.when}</span>
+            <h3 class="timeline__t">{t.title}</h3>
+            <p>{t.text}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <Springs />
+
+  <!-- Services bento -->
+  <section class="section services" id="services" aria-labelledby="services-h">
+    <Scatter items={[
+      { name: 'model-dump-truck', x: '68%', y: '7%', size: 320, rot: 4, depth: 0.7, hideMobile: true },
+      { name: 'lag-screw', x: '58%', y: '4%', size: 110, rot: -30, depth: 0.3, hideMobile: true },
+    ]} />
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="h-section" id="services-h" data-reveal>Everything under<br />the truck.</h2>
+        <ul class="fleet" data-reveal style="--d:80ms" aria-label="What we work on">
+          {fleet.map((f) => <li>{f.name}</li>)}
+        </ul>
+      </div>
+      <ul class="bento">
+        {bento.map((b, i) => (
+          <li class:list={['tile', b.cls]} id={b.href ? undefined : b.s.slug} data-reveal style={`--d:${(i % 3) * 70}ms`}>
+            <Image src={b.img} alt={b.alt} widths={[480, 800, 1200]} sizes="(max-width: 860px) 100vw, 50vw" class="tile__img" />
+            <div class="tile__body">
+              <span class="tile__icon"><Icon name={b.icon} size={20} /></span>
+              <h3 class="tile__t">{b.s.name}</h3>
+              <p class="tile__s">{b.s.short}</p>
+              <ul class="tile__items">{b.s.items.map((it) => <li>{it}</li>)}</ul>
+              {b.href && <a class="tile__link" href={b.href}>See more <Icon name="arrow-right" size={16} /></a>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- Gallery -->
+  <section class="section gallery" aria-labelledby="gallery-h">
+    <Scatter items={[
+      { name: 'model-semi', x: '62%', y: '4%', size: 260, rot: 0, depth: 0.6, hideMobile: true },
+    ]} />
+    <div class="wrap gallery__head">
+      <div>
+        <p class="eyebrow" data-reveal>Straight off the Facebook page</p>
+        <h2 class="h-section" id="gallery-h" data-reveal style="--d:60ms">Lately in the bays.</h2>
+      </div>
+      <div class="gallery__nav">
+        <button type="button" class="gallery__btn" data-scroll="-1" aria-label="Previous photos"><Icon name="arrow-right" size={20} class="flip" /></button>
+        <button type="button" class="gallery__btn" data-scroll="1" aria-label="Next photos"><Icon name="arrow-right" size={20} /></button>
+      </div>
+    </div>
+    <ul class="strip" data-strip tabindex="0" aria-label="Photos from the shop">
+      {gallery.map((g) => (
+        <li class:list={['shot', `shot--${g.w}`]}>
+          <figure>
+            <div class="frame shot__frame"><Image src={g.img} alt={g.alt} widths={[480, 900, 1400]} sizes="(max-width: 860px) 85vw, 40vw" /></div>
+            <figcaption>{g.cap}</figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <!-- Plows -->
+  <section class="plows" id="plows" aria-labelledby="plows-h">
+    <div class="plows__media" aria-hidden="true">
+      <Image src={imgPlowNight} alt="" widths={[828, 1440, 2400]} sizes="100vw" class="plows__img" />
+    </div>
+    <div class="wrap plows__grid">
+      <div class="plows__copy">
+        <h2 class="h-section" id="plows-h" data-reveal>Authorized<br /><span class="green">Meyer</span> dealer.</h2>
+        <p class="lede" data-reveal style="--d:80ms">Plows and salt and sand spreaders, sold, installed and serviced in Barre. And every plow brand repaired.</p>
+        <ul class="ticks" data-reveal style="--d:140ms">
+          <li><Icon name="check" size={18} /> Straight blades and V-plows</li>
+          <li><Icon name="check" size={18} /> Half tons up to dump trucks</li>
+          <li><Icon name="check" size={18} /> Truck and walk-behind spreaders</li>
+          <li><Icon name="check" size={18} /> Repairs on all plow brands</li>
+        </ul>
+        <div class="plows__cta" data-reveal style="--d:200ms">
+          <a class="btn" href={`tel:${company.phoneRaw}`}><Icon name="phone" weight="fill" /> {cta.call}</a>
+        </div>
+      </div>
+      <figure class="plows__inset frame" data-reveal style="--d:160ms">
+        <Image src={pPlowShop} alt="A pickup with a newly installed yellow Meyer V-plow, lights on, outside McLeod’s at night" widths={[480, 900]} sizes="(max-width: 860px) 90vw, 30vw" />
+        <figcaption>Another plow done, outside the shop.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Parts -->
+  <section class="section parts" id="parts" aria-labelledby="parts-h">
+    <Scatter items={[
+      { name: 'u-bolt', x: '45%', y: '80%', size: 110, rot: 18, depth: 0.45, hideMobile: true },
+      { name: 'chain-hook', x: '-3%', y: '74%', size: 190, rot: -12, depth: 0.6 },
+    ]} />
+    <div class="wrap parts__grid">
+      <div class="parts__copy">
+        <h2 class="h-section" id="parts-h" data-reveal>A parts store,<br />too.</h2>
+        <p class="lede" data-reveal style="--d:80ms">{parts.intro}</p>
+        <div class="parts__groups">
+          {parts.groups.map((g, i) => (
+            <div class="pgroup" data-reveal style={`--d:${120 + i * 60}ms`}>
+              <h3 class="pgroup__h mono">{g.name}</h3>
+              <ul>{g.items.map((it) => <li>{it}</li>)}</ul>
+            </div>
+          ))}
+        </div>
+        <figure class="parts__q" data-reveal>
+          <blockquote>“fast walkin service for most all chassis parts”</blockquote>
+          <figcaption class="mono">Drew Perry, Google review</figcaption>
+        </figure>
+      </div>
+      <div class="parts__media">
+        <figure class="frame parts__a" data-reveal><Image src={imgUbolts} alt="New U-bolts, nuts and washers laid out by size beside a length of chain" widths={[600, 1000, 1400]} sizes="(max-width: 860px) 100vw, 45vw" /></figure>
+        <figure class="frame parts__b" data-reveal style="--d:120ms"><Image src={pChain} alt="A rack of chain, binders and hooks at the McLeod’s parts counter" widths={[400, 700]} sizes="(max-width: 860px) 45vw, 18vw" /></figure>
+        <figure class="frame parts__c" data-reveal style="--d:200ms"><Image src={pCounter} alt="Two McLeod’s counter staff at the parts desk with shelves of stock behind" widths={[500, 900]} sizes="(max-width: 860px) 55vw, 24vw" /></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reviews -->
+  <section class="section reviews" id="reviews" aria-labelledby="reviews-h">
+    <Scatter items={[
+      { name: 'leaf-pack', x: '72%', y: '6%', size: 280, rot: -8, depth: 0.55, hideMobile: true },
+    ]} />
+    <div class="wrap">
+      <div class="reviews__top">
+        <div class="seal" data-reveal>
+          <span class="seal__n mono">{ratings.google.rating}</span>
+          <span class="seal__stars" aria-hidden="true">{Array.from({ length: 5 }).map(() => <Icon name="star" weight="fill" size={14} />)}</span>
+          <span class="seal__l">{ratings.google.count} Google reviews</span>
+        </div>
+        <div class="reviews__lead">
+          <p class="eyebrow" data-reveal>What Barre says</p>
+          <h2 class="reviews__big" id="reviews-h" data-reveal style="--d:60ms">“There simply is no better place for heavy truck suspension work.”</h2>
+          <p class="reviews__by mono" data-reveal style="--d:120ms">george denagy, Google review</p>
+        </div>
+      </div>
+
+      <ReviewWall layout="row" id="home" />
+      <div class="reviews__all">
+        <a class="link-arrow" href="/reviews/">Every review on one page <Icon name="arrow-right" /></a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Visit -->
+  <section class="section visit" id="visit" aria-labelledby="visit-h">
+    <div class="wrap visit__grid">
+      <div class="visit__copy">
+        <h2 class="h-section visit__h" id="visit-h" data-reveal>32 Blackwell St.<br /><span class="green">Barre, VT.</span></h2>
+        <dl class="visit__list" data-reveal style="--d:120ms">
+          <div><dt>Shop</dt><dd><a href={`tel:${company.phoneRaw}`} class="mono">{company.phone}</a></dd></div>
+          <div><dt>Toll free</dt><dd><a href={`tel:${company.tollFreeRaw}`} class="mono">{company.tollFree}</a></dd></div>
+          <div><dt>Email</dt><dd><a href={`mailto:${company.email}`}>{company.email}</a></dd></div>
+          <div><dt>Hours</dt><dd>{hours.summary}</dd></div>
+        </dl>
+        <div class="visit__cta" data-reveal style="--d:180ms">
+          <a class="btn" href={`tel:${company.phoneRaw}`}><Icon name="phone" weight="fill" /> {cta.call}</a>
+          <a class="btn btn--ghost" href={company.mapsUrl} rel="noopener" target="_blank"><Icon name="navigation-arrow" /> {cta.directions}</a>
+        </div>
+        <p class="family__sister" data-reveal style="--d:220ms"><Icon name="map-pin" size={16} /> <span>Closer to Burlington? The family also runs <strong>{sister.name}</strong> at {sister.address}.</span></p>
+        {hiring.open && (
+          <p class="visit__hiring" data-reveal style="--d:260ms"><Icon name="briefcase" size={16} /> <span><strong>We’re hiring:</strong> {hiring.roles.join(' and ').toLowerCase()}. Stop in or give us a call.</span></p>
+        )}
+      </div>
+      <div class="visit__media">
+        <figure class="frame visit__photo" data-reveal><Image src={pShop} alt="The McLeod’s Spring & Chassis building on a sunny day, with trucks in front of the open bays" widths={[600, 1000, 1600]} sizes="(max-width: 860px) 100vw, 55vw" /></figure>
+        <div class="visit__map" data-reveal style="--d:120ms">
+          <iframe
+            title="Map to McLeod’s Spring & Chassis, 32 Blackwell St, Barre"
+            src="https://maps.google.com/maps?q=32%20Blackwell%20St%2C%20Barre%2C%20VT%2005641&z=15&output=embed"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section faq" aria-labelledby="faq-h">
+    <div class="wrap faq__grid">
+      <div>
+        <h2 class="h-section" id="faq-h" data-reveal>Good<br />questions.</h2>
+        <p class="faq__aside" data-reveal style="--d:80ms">“{excerpts[1].quote}”<br /><span class="mono">Richard Deflorio, Google review</span></p>
+      </div>
+      <div class="faq__list">
+        {faqs.map((f) => (
+          <details data-reveal>
+            <summary><span>{f.q}</span><Icon name="plus" size={20} /></summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Gallery arrows scroll the strip by about one photo.
+  const strip = document.querySelector<HTMLElement>('[data-strip]');
+  document.querySelectorAll<HTMLButtonElement>('[data-scroll]').forEach((b) =>
+    b.addEventListener('click', () => {
+      if (!strip) return;
+      const dir = Number(b.dataset.scroll);
+      strip.scrollBy({ left: dir * strip.clientWidth * 0.6, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }),
+  );
+</script>
+
+<style>
+  .section { overflow: clip; }
+
+  /* ---------- Proof ---------- */
+  .proof { position: relative; z-index: 3; border-block: 1px solid var(--line); background: var(--ink-900); }
+  .proof__row { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .proof__item { display: grid; gap: 6px; padding: var(--s-6); border-left: 1px solid var(--line); }
+  .proof__item:first-child { border-left: 0; padding-left: 0; }
+  .proof__n { font-size: var(--t-4xl); line-height: 1; font-weight: 600; color: var(--text); }
+  .proof__n small { font-size: var(--t-base); margin-left: 4px; color: var(--green-400); font-weight: 500; }
+  .proof__n--word { font-family: var(--font-display); font-stretch: 72%; font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em; }
+  .proof__l { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: var(--t-sm); line-height: var(--lh-sm); }
+  .proof__stars { display: inline-flex; gap: 1px; color: var(--green-400); }
+
+  .sec-head { position: relative; z-index: 1; display: grid; gap: var(--s-5); margin-bottom: var(--s-8); max-width: 820px; }
+
+
+  /* ---------- Family ---------- */
+  .family__grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-10); align-items: center; }
+  .family__photos { position: relative; display: grid; grid-template-columns: 1fr 0.62fr; align-items: end; gap: var(--s-4); }
+  .family__a { aspect-ratio: 1; }
+  .family__b { aspect-ratio: 3 / 4; transform: translateY(var(--s-8)); }
+  .family__stamp {
+    position: absolute;
+    left: -18px;
+    top: -18px;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    width: 124px;
+    height: 124px;
+    border-radius: 50%;
+    background: var(--ink-950);
+    border: 5px solid var(--green-700);
+    box-shadow: inset 0 0 0 2px var(--chrome-50), inset 0 0 0 10px var(--ink-950), 0 20px 40px rgb(0 0 0 / 0.5);
+    text-align: center;
+    line-height: 1;
+  }
+  .family__stamp .mono { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--steel-300); }
+  .family__stamp strong { font-family: var(--font-display); font-stretch: 75%; font-weight: 800; font-size: 2.35rem; margin-block: 4px; }
+  .family__copy .lede { margin-top: var(--s-6); max-width: 36rem; }
+  .family__q { margin: var(--s-7) 0 0; padding-left: var(--s-5); border-left: 2px solid var(--green-500); }
+  .family__q blockquote { font-size: var(--t-xl); line-height: var(--lh-xl); }
+  .family__q figcaption, .parts__q figcaption { margin-top: var(--s-3); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+  .timeline { position: relative; z-index: 1; list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-6); margin-top: var(--s-11); }
+  .timeline li { display: grid; align-content: start; gap: var(--s-2); padding-top: var(--s-4); border-top: 2px solid var(--line-strong); }
+  .timeline li:nth-child(2) { border-top-color: var(--green-500); }
+  .timeline__when { font-size: var(--t-xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--green-400); }
+  .timeline__t { font-size: var(--t-xl); line-height: 1.05; font-stretch: 78%; margin-top: 4px; }
+  .timeline p { font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--text-muted); }
+  .family__sister, .visit__hiring { display: flex; align-items: flex-start; gap: 8px; margin-top: var(--s-6); color: var(--text-muted); font-size: var(--t-sm); }
+  .family__sister :global(svg), .visit__hiring :global(svg) { color: var(--green-400); flex: none; margin-top: 2px; }
+  .family__sister strong, .visit__hiring strong { color: var(--text); }
+  .visit__hiring { margin-top: var(--s-3); }
+
+  /* ---------- Services ---------- */
+  .services .wrap { position: relative; z-index: 1; }
+  .fleet { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+  .fleet li {
+    padding: 7px 12px;
+    border: 1px solid var(--line-strong);
+    font-family: var(--font-display);
+    font-stretch: 78%;
+    font-weight: 800;
+    font-size: var(--t-base);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--steel-200);
+  }
+  .bento {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: 330px;
+    gap: var(--s-4);
+  }
+  .tile {
+    position: relative;
+    overflow: hidden;
+    background: var(--ink-850);
+    display: flex;
+    align-items: flex-end;
+    isolation: isolate;
+  }
+  .tile :global(.tile__img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2;
+    transition: transform 1.2s var(--ease-out);
+  }
+  .tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(180deg, rgb(12 13 15 / 0.05) 10%, rgb(12 13 15 / 0.92) 82%);
+  }
+  .tile:hover :global(.tile__img) { transform: scale(1.04); }
+  .tile__body { padding: var(--s-6); display: grid; gap: var(--s-3); max-width: 32rem; }
+  .tile__icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    background: var(--green-500);
+    color: var(--ink-950);
+  }
+  .tile__t { font-size: clamp(1.5rem, 2vw, 2rem); line-height: 0.95; }
+  .tile__s { color: var(--steel-200); font-size: var(--t-sm); line-height: var(--lh-sm); }
+  .tile__items { display: none; list-style: none; flex-wrap: wrap; gap: 6px; }
+  .b-a .tile__items, .b-f .tile__items { display: flex; }
+  .tile__items li {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1;
+    padding: 6px 8px;
+    border: 1px solid rgb(255 255 255 / 0.22);
+    background: rgb(12 13 15 / 0.4);
+    color: var(--steel-200);
+  }
+  .tile__link { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: var(--t-sm); color: var(--green-400); text-decoration: none; }
+  .tile__link::before { content: ''; position: absolute; inset: 0; }
+  /* Two rows, asymmetric widths: 5/4/3 then 3/4/5. */
+  .b-a { grid-column: span 5; }
+  .b-b { grid-column: span 4; }
+  .b-c { grid-column: span 3; }
+  .b-d { grid-column: span 3; }
+  .b-e { grid-column: span 4; }
+  .b-f { grid-column: span 5; }
+
+  /* ---------- Gallery ---------- */
+  .gallery__head { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s-6); margin-bottom: var(--s-7); }
+  .gallery__head .h-section { margin-top: var(--s-4); }
+  .gallery__nav { display: flex; gap: var(--s-3); }
+  .gallery__btn {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+  .gallery__btn:hover { background: var(--green-500); border-color: var(--green-500); color: var(--ink-950); }
+  .gallery__btn :global(.flip) { transform: rotate(180deg); }
+  .strip {
+    position: relative;
+    z-index: 1;
+    --shot-h: clamp(220px, 24vw, 340px);
+    list-style: none;
+    display: flex;
+    gap: var(--s-4);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-inline: max(var(--gutter), calc((100vw - var(--max)) / 2));
+    scroll-padding-inline: max(var(--gutter), calc((100vw - var(--max)) / 2));
+    padding-bottom: var(--s-4);
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink-600) transparent;
+  }
+  .shot { flex: none; scroll-snap-align: start; }
+  .shot figure { margin: 0; }
+  .shot__frame { height: var(--shot-h); }
+  .shot--wide .shot__frame { aspect-ratio: 4 / 3; }
+  .shot--tall .shot__frame { aspect-ratio: 3 / 4; }
+  /* Phone photos, graded down a touch so they sit in the dark page. */
+  .shot__frame :global(img) { filter: saturate(0.88) contrast(1.04) brightness(0.92); transition: filter 400ms ease; }
+  .shot:hover .shot__frame :global(img) { filter: none; }
+  .shot figcaption { margin-top: var(--s-3); font-size: var(--t-sm); color: var(--text-muted); max-width: 36ch; }
+
+  /* ---------- Plows ---------- */
+  .plows { position: relative; overflow: hidden; isolation: isolate; padding-block: var(--s-11); min-height: min(80svh, 760px); display: flex; align-items: center; }
+  .plows__media { position: absolute; inset: 0; z-index: -1; }
+  .plows__media :global(.plows__img) { width: 100%; height: 100%; object-fit: cover; object-position: 30% 50%; }
+  .plows__media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, var(--bg) 0%, rgb(12 13 15 / 0) 16%, rgb(12 13 15 / 0) 84%, var(--bg) 100%),
+      linear-gradient(270deg, rgb(8 11 18 / 0.92) 8%, rgb(8 11 18 / 0.55) 46%, rgb(8 11 18 / 0) 70%);
+  }
+  .plows__grid { display: grid; grid-template-columns: 1fr minmax(0, 440px); gap: var(--s-10); align-items: center; }
+  .plows__copy { grid-column: 2; grid-row: 1; }
+  .plows__copy .lede { margin-top: var(--s-5); color: var(--steel-200); }
+  .ticks { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3) var(--s-5); margin-top: var(--s-6); }
+  .ticks li { display: flex; align-items: flex-start; gap: 8px; font-weight: 600; font-size: var(--t-sm); line-height: var(--lh-sm); }
+  .ticks :global(svg) { color: var(--green-400); flex: none; margin-top: 1px; }
+  .plows__cta { margin-top: var(--s-7); }
+  .plows__inset { grid-column: 1; grid-row: 1; align-self: end; justify-self: start; width: min(320px, 100%); box-shadow: 0 30px 60px rgb(0 0 0 / 0.45); }
+  .plows__inset :global(img) { aspect-ratio: 4 / 3; }
+  .plows__inset figcaption { padding: 10px 14px; font-size: var(--t-xs); color: var(--steel-300); background: var(--ink-900); }
+
+  /* ---------- Parts ---------- */
+  .parts__grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-10); align-items: center; }
+  .parts__copy .lede { margin-top: var(--s-5); }
+  .parts__groups { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s-6); margin-top: var(--s-7); }
+  .pgroup__h { font-size: var(--t-xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--green-400); font-stretch: 100%; font-weight: 500; padding-bottom: var(--s-3); border-bottom: 1px solid var(--line-strong); }
+  .pgroup ul { list-style: none; display: grid; gap: var(--s-2); margin-top: var(--s-3); font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--text-muted); }
+  .parts__q { margin: var(--s-7) 0 0; padding-left: var(--s-5); border-left: 2px solid var(--green-500); }
+  .parts__q blockquote { font-size: var(--t-lg); line-height: var(--lh-lg); }
+  .parts__media { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--s-4); }
+  .parts__a { grid-column: 1 / -1; aspect-ratio: 16 / 9; }
+  .parts__b { grid-column: 1 / span 2; aspect-ratio: 3 / 4; }
+  .parts__c { grid-column: 3 / -1; aspect-ratio: 4 / 3; align-self: end; }
+
+  /* ---------- Reviews ---------- */
+  .reviews { background: linear-gradient(180deg, var(--bg), var(--ink-900) 30%, var(--ink-900) 70%, var(--bg)); }
+  .reviews .wrap { position: relative; z-index: 1; }
+  .reviews__top { display: grid; grid-template-columns: auto 1fr; gap: var(--s-9); align-items: center; margin-bottom: var(--s-8); }
+  .seal {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 6px;
+    width: 176px;
+    height: 176px;
+    border-radius: 50%;
+    border: 6px solid var(--green-700);
+    box-shadow: inset 0 0 0 2px var(--chrome-50), inset 0 0 0 12px var(--ink-950);
+    background: var(--ink-950);
+    text-align: center;
+  }
+  .seal__n { font-size: 3.2rem; line-height: 1; font-weight: 600; }
+  .seal__stars { display: flex; gap: 2px; color: var(--green-400); }
+  .seal__l { font-size: var(--t-xs); color: var(--text-muted); max-width: 8rem; }
+  .reviews__big {
+    margin-top: var(--s-4);
+    font-stretch: 75%;
+    font-size: clamp(1.9rem, 3.6vw, 3.3rem);
+    line-height: 0.95;
+    max-width: 24ch;
+  }
+  .reviews__by { margin-top: var(--s-4); font-size: var(--t-xs); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
+  .reviews__all { display: flex; justify-content: flex-start; margin-top: var(--s-4); }
+
+  /* ---------- Visit ---------- */
+  .visit__grid { position: relative; z-index: 1; display: grid; grid-template-columns: 0.9fr 1.1fr; gap: var(--s-10); align-items: center; }
+  .visit__h { font-size: clamp(2.25rem, 4.2vw, 3.9rem); }
+  .visit__list { display: grid; gap: 0; margin: var(--s-7) 0 0; }
+  .visit__list div { display: grid; grid-template-columns: 110px 1fr; gap: var(--s-5); padding: var(--s-3) 0; border-bottom: 1px solid var(--line); }
+  .visit__list dt { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); padding-top: 3px; }
+  .visit__list dd { margin: 0; font-weight: 600; }
+  .visit__list a { text-decoration: none; }
+  .visit__list a:hover { color: var(--green-400); }
+  .visit__cta { display: flex; flex-wrap: wrap; gap: var(--s-4); margin-top: var(--s-7); }
+  .visit__media { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+  .visit__photo { aspect-ratio: 4 / 5; }
+  .visit__map { aspect-ratio: 4 / 5; background: var(--ink-800); border: 1px solid var(--line); overflow: hidden; }
+  .visit__map iframe { width: 100%; height: 100%; border: 0; filter: grayscale(1) invert(0.92) contrast(0.9) hue-rotate(180deg); }
+
+  /* ---------- FAQ ---------- */
+  .faq { padding-top: 0; }
+  .faq__grid { position: relative; z-index: 1; display: grid; grid-template-columns: 0.7fr 1.3fr; gap: var(--s-10); }
+  .faq__aside { margin-top: var(--s-6); max-width: 22rem; color: var(--text-muted); font-size: var(--t-base); line-height: var(--lh-base); }
+  .faq__aside .mono { display: inline-block; margin-top: var(--s-3); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+  .faq__list { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--s-7); align-content: start; }
+  .faq__list details { border-top: 1px solid var(--line-strong); }
+  .faq__list summary { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding: var(--s-4) 0; cursor: pointer; list-style: none; font-weight: 700; font-size: var(--t-base); line-height: var(--lh-base); }
+  .faq__list summary::-webkit-details-marker { display: none; }
+  .faq__list summary :global(svg) { transition: transform 240ms var(--ease-out); flex: none; }
+  .faq__list details[open] summary :global(svg) { transform: rotate(45deg); color: var(--green-400); }
+  .faq__list details p { padding-bottom: var(--s-5); color: var(--text-muted); font-size: var(--t-sm); line-height: var(--lh-sm); }
+
+  /* ---------- Tablet ---------- */
+  @media (max-width: 1080px) {
+    .faq__list { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 960px) {
+    .bento { grid-auto-rows: 300px; }
+    .b-a, .b-b, .b-c, .b-d, .b-e, .b-f { grid-column: span 6; }
+    .timeline { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ---------- Mobile: same layouts, swiped instead of stacked ---------- */
+  @media (max-width: 860px) {
+    .proof__row { grid-template-columns: 1fr 1fr; }
+    .proof__item { padding: var(--s-5) var(--s-4); }
+    .proof__item:nth-child(odd) { border-left: 0; padding-left: 0; }
+    .proof__item:nth-child(n+3) { border-top: 1px solid var(--line); }
+    .proof__n { font-size: var(--t-3xl); }
+
+    .family__grid { grid-template-columns: 1fr; gap: var(--s-8); }
+    .family__photos { margin-left: 14px; grid-template-columns: 1fr 0.7fr; }
+    .family__b { transform: none; }
+    .family__stamp { width: 92px; height: 92px; left: -14px; top: -14px; }
+    .family__stamp strong { font-size: 1.7rem; }
+    .family__stamp .mono { font-size: 8px; }
+    .timeline { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: var(--s-4); margin: var(--s-8) calc(var(--gutter) * -1) 0; padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); scrollbar-width: none; }
+    .timeline::-webkit-scrollbar { display: none; }
+    .timeline li { flex: 0 0 72vw; scroll-snap-align: start; background: var(--surface); padding: var(--s-5); border-top-width: 2px; }
+
+    .sec-head { margin-bottom: var(--s-6); }
+    .fleet { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); scrollbar-width: none; }
+    .fleet::-webkit-scrollbar { display: none; }
+    .fleet li { flex: none; font-size: var(--t-sm); }
+    .bento { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: var(--s-4); margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); scrollbar-width: none; }
+    .bento::-webkit-scrollbar { display: none; }
+    .tile { flex: 0 0 80vw; height: 400px; scroll-snap-align: start; }
+    .tile__items { display: flex; }
+
+    .gallery__nav { display: none; }
+
+    .plows { min-height: 0; padding-block: var(--s-10); }
+    .plows__grid { grid-template-columns: 1fr; }
+    .plows__copy { grid-column: 1; }
+    .plows__inset { display: none; }
+    .plows__media::after {
+      background:
+        linear-gradient(180deg, var(--bg) 0%, rgb(8 11 18 / 0.55) 30%, rgb(8 11 18 / 0.88) 60%, var(--bg) 100%);
+    }
+
+    .parts__grid { grid-template-columns: 1fr; gap: var(--s-7); }
+    .parts__media { order: -1; }
+    .parts__b, .parts__c { display: none; }
+    .parts__groups { gap: var(--s-5); }
+
+    .reviews__top { grid-template-columns: auto 1fr; gap: var(--s-5); align-items: start; margin-bottom: var(--s-6); }
+    .seal { width: 96px; height: 96px; border-width: 4px; box-shadow: inset 0 0 0 2px var(--chrome-50), inset 0 0 0 7px var(--ink-950); }
+    .seal__n { font-size: 1.7rem; }
+    .seal__stars :global(svg) { width: 9px; height: 9px; }
+    .seal__l { display: none; }
+    .reviews__big { font-size: clamp(1.5rem, 6.4vw, 2.1rem); margin-top: var(--s-2); }
+
+    .visit__grid { grid-template-columns: 1fr; gap: var(--s-7); }
+    .visit__media { grid-template-columns: 1fr; }
+    .visit__photo { display: none; }
+    .visit__map { aspect-ratio: 16 / 10; }
+
+    .faq__grid { grid-template-columns: 1fr; gap: var(--s-5); }
+    .faq__aside { display: none; }
+  }
+  @media (max-width: 600px) {
+    .visit__list div { grid-template-columns: 90px 1fr; }
+    .ticks { grid-template-columns: 1fr; }
+  }
+</style>

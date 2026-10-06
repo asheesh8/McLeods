@@ -1,0 +1,152 @@
+---
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import hero from '@/assets/gen/hero-dusk.jpg';
+import { company, cta, history } from '@/data/business';
+---
+
+<section class="hero" aria-labelledby="hero-h">
+  <div class="hero__media" aria-hidden="true">
+    <Image
+      src={hero}
+      alt=""
+      widths={[828, 1280, 1920, 2688]}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+      class="hero__img"
+    />
+    <div class="hero__snow hero__snow--a"></div>
+    <div class="hero__snow hero__snow--b"></div>
+    <div class="hero__shade"></div>
+  </div>
+
+  <div class="wrap hero__inner">
+    <p class="hero__kicker"><span class="hero__since mono">Since {history.founded}</span> Family-owned in {company.city}, Vermont</p>
+    <h1 class="h-display hero__h" id="hero-h">
+      <span class="hero__line">Your truck</span>
+      <span class="hero__line">chassis <span class="green">specialists.</span></span>
+    </h1>
+    <p class="lede hero__lede">
+      Springs, brakes, alignment, frame repair and Meyer plows, for pickups through tractor trailers.
+    </p>
+    <div class="hero__cta">
+      <a class="btn" href={`tel:${company.phoneRaw}`}><Icon name="phone" weight="fill" /> {cta.call}</a>
+      <a class="btn btn--ghost" href={company.mapsUrl} rel="noopener" target="_blank"><Icon name="navigation-arrow" /> {cta.directions}</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    margin-top: calc(var(--header-h) * -1);
+    min-height: max(640px, 100svh);
+    max-height: 1080px;
+    display: flex;
+    align-items: flex-start;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .hero__media { position: absolute; inset: 0; z-index: -1; }
+  .hero__media :global(.hero__img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 16% 70%;
+  }
+  .hero__shade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgb(12 13 15 / 0.72) 0%, rgb(12 13 15 / 0.15) 22%, rgb(12 13 15 / 0) 40%),
+      linear-gradient(100deg, rgb(10 14 24 / 0.78) 0%, rgb(10 14 24 / 0.42) 38%, rgb(10 14 24 / 0) 62%),
+      linear-gradient(0deg, var(--bg) 0%, rgb(12 13 15 / 0) 18%);
+  }
+
+  /* Snow, two tiled layers drifting down. Transform only. */
+  .hero__snow {
+    position: absolute;
+    inset: -600px -300px 0 0;
+    pointer-events: none;
+    opacity: 0.55;
+    background-image:
+      radial-gradient(1.6px 1.6px at 20px 30px, #fff 50%, transparent 51%),
+      radial-gradient(1.2px 1.2px at 140px 90px, #fff 50%, transparent 51%),
+      radial-gradient(2px 2px at 220px 170px, #fff 50%, transparent 51%),
+      radial-gradient(1.3px 1.3px at 60px 210px, #fff 50%, transparent 51%),
+      radial-gradient(1.8px 1.8px at 280px 260px, #fff 50%, transparent 51%);
+    background-size: 300px 300px;
+    display: none;
+  }
+  .hero__snow--b {
+    opacity: 0.32;
+    background-size: 190px 190px;
+    filter: blur(0.6px);
+  }
+
+  .hero__inner {
+    position: relative;
+    padding-top: calc(var(--header-h) + clamp(32px, 7vh, 88px));
+    padding-bottom: var(--s-12);
+  }
+  .hero__kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-4);
+    margin-bottom: var(--s-6);
+    font-weight: 600;
+    font-size: var(--t-sm);
+    letter-spacing: 0.02em;
+    color: var(--steel-200);
+  }
+  .hero__since {
+    padding: 6px 10px;
+    background: var(--green-500);
+    color: var(--ink-950);
+    font-size: var(--t-xs);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .hero__h {
+    display: grid;
+    max-width: 11ch;
+    font-size: clamp(3.4rem, 6.6vw, 7rem);
+    text-shadow: 0 2px 30px rgb(0 0 0 / 0.35);
+  }
+  .hero__line { display: block; }
+  .hero__lede {
+    margin-top: var(--s-6);
+    max-width: 30rem;
+    color: var(--steel-200);
+    text-shadow: 0 1px 12px rgb(0 0 0 / 0.5);
+  }
+  .hero__cta { display: flex; flex-wrap: wrap; gap: var(--s-4); margin-top: var(--s-7); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__media :global(.hero__img) { animation: hero-settle 2.6s var(--ease-out) both; }
+    .hero__snow { display: block; animation: snow-a 22s linear infinite; }
+    .hero__snow--b { animation: snow-b 30s linear infinite; }
+    .hero__kicker, .hero__line, .hero__lede, .hero__cta { animation: hero-up 1s var(--ease-out) both; }
+    .hero__line:nth-child(2) { animation-delay: 90ms; }
+    .hero__lede { animation-delay: 200ms; }
+    .hero__cta { animation-delay: 300ms; }
+  }
+  @keyframes hero-settle { from { transform: scale(1.07); } to { transform: none; } }
+  /* Travel a whole number of tiles so the loop is seamless. */
+  @keyframes snow-a { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-300px, 600px, 0); } }
+  @keyframes snow-b { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-190px, 570px, 0); } }
+  @keyframes hero-up { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+
+  @media (max-width: 860px) {
+    .hero { min-height: max(600px, 100svh); }
+    .hero__media :global(.hero__img) { object-position: 34% 80%; }
+    .hero__shade {
+      background:
+        linear-gradient(180deg, rgb(10 14 24 / 0.86) 0%, rgb(10 14 24 / 0.55) 40%, rgb(10 14 24 / 0) 62%),
+        linear-gradient(0deg, var(--bg) 0%, rgb(12 13 15 / 0) 20%);
+    }
+    .hero__h { font-size: clamp(3rem, 13.5vw, 5rem); }
+  }
+</style>
