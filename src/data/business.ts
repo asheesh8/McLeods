@@ -25,7 +25,8 @@ export const company = {
   // Brian & Shannon Bailey run the shop with their kids Brian Jr. and Caitlin
   // (Facebook posts). TODO(mcleods): confirm how they want the family named.
   owners: 'Brian & Shannon Bailey',
-  url: 'https://www.mcleodsspring.com', // TODO(mcleods): confirm domain
+  // The site URL is not set here. It comes from astro.config.mjs (SITE_URL or
+  // Vercel's production domain). TODO(mcleods): connect the real domain.
   phone: '(802) 476-4971',
   phoneRaw: '+18024764971',
   // On their mud flaps, truck lettering and the McLeod's/Bailey event banner.

@@ -25,7 +25,8 @@ const {
   schema = [],
 } = Astro.props;
 
-const site = company.url;
+// From astro.config.mjs: SITE_URL, else Vercel's production domain.
+const site = (Astro.site?.href ?? 'https://mcleods.vercel.app/').replace(/\/$/, '');
 const canonicalUrl = new URL(canonical, site).href;
 const ogUrl = new URL(ogImage, site).href;
 
